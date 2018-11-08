@@ -2,6 +2,7 @@
   "name": "image-gallery",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "@material-ui/core": "^3.4.0",
     "babel-loader": "^8.0.4",

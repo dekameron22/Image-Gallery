@@ -7,28 +7,10 @@ import Select from '@material-ui/core/Select'
 import FormControl from '@material-ui/core/FormControl'
 import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import Upload from './Upload'
 import ImageList from './ImageList'
-import './App.css'
-
-const images = [
-    {
-        name: 'Babraca',
-        src: 'https://cdn.pixabay.com/photo/2017/12/29/18/47/nature-3048299__340.jpg'
-    },
-    {
-        name: 'Abraca',
-        src: 'https://cdn.pixabay.com/photo/2017/12/29/18/47/nature-3048299__340.jpg'
-    },
-    {
-        name: 'Dabraca',
-        src: 'https://cdn.pixabay.com/photo/2017/12/29/18/47/nature-3048299__340.jpg'
-    },
-    {
-        name: 'Cabraca',
-        src: 'https://cdn.pixabay.com/photo/2017/12/29/18/47/nature-3048299__340.jpg'
-    }
-]
+import './stylesheets/App.css'
 
 const sortBy = [
     {
@@ -47,8 +29,33 @@ class App extends Component {
     state = {
         tab: 0,
         sortBy: sortBy[2].label,
-        images: images,
-        find: ''
+        images: null,
+        find: '',
+        loading: false
+    }
+
+    async componentDidMount() {
+        this.setState({ loading: true })
+        try {
+            let response = await fetch('/api', {
+                method: 'get',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+            })
+            if (response.ok) {
+                let responseJson = await response.json()
+                let images = responseJson.images.slice()
+                for (let image of images) {
+                    if (image.name.length > 20) image.name = image.name.slice(0, 20) + '...'
+                    // image.src = atob(image.src)
+                }
+                console.log(images)
+                this.setState({ images: responseJson.images })
+            }
+            this.setState({ loading: false })
+        } catch (err) {
+            console.log(err.message)
+            this.setState({ loading: false })
+        }
     }
 
     onSort(event) {
@@ -68,7 +75,7 @@ class App extends Component {
                         <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '70%' }}>
                             <TextField
                                 variant='outlined'
-                                label='Find picrute...'
+                                label='Find image...'
                                 style={{ width: '65%' }}
                                 onChange={e => this.setState({ find: e.target.value })}
                             />
@@ -95,8 +102,18 @@ class App extends Component {
                                 </Select>
                             </FormControl>
                         </div>
-                        <ImageList images={this.state.images} />
-                        <Button variant='outlined' style={{ marginTop: 10 }}>Load more</Button>
+                        {this.state.loading ?
+                            <CircularProgress color='secondary' />
+                            :
+                            (this.state.images && this.state.images.length > 0) &&
+                            <div>
+                                <ImageList images={this.state.images} />
+                                {/* {this.state.images.map(image => 
+                                    <img src={image.src} />
+                                )} */}
+                                <Button variant='outlined' style={{ marginTop: 10 }}>Load more</Button>
+                            </div>
+                        }
                     </Paper>
                 </div>
             </div>

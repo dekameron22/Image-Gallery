@@ -4,7 +4,7 @@ import Paper from '@material-ui/core/Paper'
 export default class Image extends Component {
     render() {
         return (
-            <Paper style={{ height: 240, width: 300 }}>
+            <Paper style={{ height: 400, width: 500 }}>
                 <img
                     src={this.props.src}
                     style={{ height: '80%', width: '95%', marginTop: 5 }}
