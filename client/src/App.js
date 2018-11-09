@@ -29,27 +29,34 @@ class App extends Component {
     state = {
         tab: 0,
         sortBy: sortBy[2].label,
-        images: null,
+        images: [],
         find: '',
-        loading: false
+        loading: false,
+        page: 0,
+        dynamicLoading: false
     }
+    getImages = this.getImages.bind(this)
 
     async componentDidMount() {
+        this.getImages(0)
+    }
+
+    async getImages(page) {
         this.setState({ loading: true })
         try {
-            let response = await fetch('/api', {
+            let response = await fetch('/api?start=' + page, {
                 method: 'get',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
             })
             if (response.ok) {
                 let responseJson = await response.json()
-                let images = responseJson.images.slice()
-                for (let image of images) {
+                for (let image of responseJson.images)
                     if (image.name.length > 20) image.name = image.name.slice(0, 20) + '...'
-                    // image.src = atob(image.src)
-                }
-                console.log(images)
-                this.setState({ images: responseJson.images })
+
+                let images = this.state.images
+                if (page !== this.state.page) images = images.concat(responseJson.images)
+                else images = responseJson.images.slice()
+                this.setState({ images })
             }
             this.setState({ loading: false })
         } catch (err) {
@@ -63,13 +70,21 @@ class App extends Component {
         console.log(sortBy.find(elm => elm.label === event.target.value).sort(this.state.images))
     }
 
+    async onLoadMore() {
+        let page = this.state.page
+        let prevCount = this.state.images.length
+        await this.getImages(page + 1)
+        let currCount = this.state.images.length
+        if (prevCount !== currCount) this.setState({ page: page + 1 })
+    }
+
     render() {
         return (
             <div style={{ textAlign: 'center' }}>
                 <div className='app-body'>
                     <Paper style={{ padding: 10, paddingTop: 0, marginBottom: 20, marginTop: 20, width: '75%' }}>
                         <div style={{ marginTop: 10, marginBottom: 10, textAlign: 'left' }}>
-                            <Upload />
+                            <Upload updateData={this.getImages} />
                             <Divider style={{ marginTop: 10 }} />
                         </div>
                         <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '70%' }}>
@@ -102,16 +117,15 @@ class App extends Component {
                                 </Select>
                             </FormControl>
                         </div>
-                        {this.state.loading ?
-                            <CircularProgress color='secondary' />
-                            :
-                            (this.state.images && this.state.images.length > 0) &&
+                        {this.state.loading && <CircularProgress color='secondary' style={{ marginBottom: 10 }} />}
+                        {this.state.images.length > 0 &&
                             <div>
                                 <ImageList images={this.state.images} />
-                                {/* {this.state.images.map(image => 
-                                    <img src={image.src} />
-                                )} */}
-                                <Button variant='outlined' style={{ marginTop: 10 }}>Load more</Button>
+                                {this.state.dynamicLoading ?
+                                    <CircularProgress color='secondary' size={20} style={{ marginTop: 10 }} />
+                                    :
+                                    <Button variant='outlined' style={{ marginTop: 10 }} onClick={() => this.onLoadMore()}>Load more</Button>
+                                }
                             </div>
                         }
                     </Paper>

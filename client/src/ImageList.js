@@ -9,7 +9,7 @@ export default class ImageList extends Component {
                 <Grid item xs={12}>
                     <Grid container justify="center" spacing={Number(24)}>
                         {this.props.images.map(value => (
-                            <Grid key={value.name} item>
+                            <Grid key={value.id} item>
                                 <Image src={value.src} name={value.name} />
                             </Grid>
                         ))}

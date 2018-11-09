@@ -15,14 +15,7 @@ app.use(bodyParser.json({
     extended: false
 }))
 
-function readFile(path) {
-    return new Promise((resolve, reject) => {
-        fs.readFile(path, 'utf8', function (err, data) {
-            if (err) reject(err)
-            else resolve(data)
-        })
-    })
-}
+const elmsPerPage = 2
 
 let download = (uri) => {
     return new Promise((resolve, reject) => {
@@ -52,9 +45,11 @@ let download = (uri) => {
 // app.use(express.static(path.join(__dirname + '/client/', 'build')))
 
 app.get('/api', async (req, res) => {
+    let start = parseInt(req.query.start)
+    if (!start) start = 0
     try {
         const dbImgs = await dbManager.getAll()
-        const imgs = []
+        let imgs = []
         for (let dbImg of dbImgs) {
             const bitmap = fs.readFileSync(dbImg.path)
             const src = 'data:' + dbImg.mimetype + ';base64,' + Buffer.from(bitmap).toString('base64')
@@ -62,10 +57,12 @@ app.get('/api', async (req, res) => {
                 name: dbImg.name,
                 size: dbImg.size,
                 date: dbImg.date,
+                id: dbImg.id,
                 src
             }
             imgs.push(img)
         }
+        imgs = imgs.slice(start * elmsPerPage, start * elmsPerPage + elmsPerPage)
         res.json({ images: imgs })
     } catch (err) {
         console.log('ERROR: ' + err)
