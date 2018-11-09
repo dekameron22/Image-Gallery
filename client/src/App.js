@@ -84,7 +84,7 @@ class App extends Component {
                 <div className='app-body'>
                     <Paper style={{ padding: 10, paddingTop: 0, marginBottom: 20, marginTop: 20, width: '75%' }}>
                         <div style={{ marginTop: 10, marginBottom: 10, textAlign: 'left' }}>
-                            <Upload updateData={this.getImages} />
+                            <Upload updateData={this.getImages} page={this.state.page} />
                             <Divider style={{ marginTop: 10 }} />
                         </div>
                         <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '70%' }}>

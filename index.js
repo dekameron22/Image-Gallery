@@ -62,6 +62,7 @@ app.get('/api', async (req, res) => {
             }
             imgs.push(img)
         }
+        imgs.sort((a, b) => b.date - a.date)
         imgs = imgs.slice(start * elmsPerPage, start * elmsPerPage + elmsPerPage)
         res.json({ images: imgs })
     } catch (err) {

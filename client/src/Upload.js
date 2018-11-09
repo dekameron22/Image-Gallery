@@ -20,7 +20,7 @@ export default class Upload extends Component {
             })
         })
         if (response.ok) {
-            this.props.updateData()
+            this.props.updateData(this.props.page)
         }
         this.setState({ loading: false })
     }
