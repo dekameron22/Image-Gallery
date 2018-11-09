@@ -15,9 +15,11 @@ app.use(bodyParser.json({
     extended: false
 }))
 
+// app.use(express.static(path.join(__dirname + '/client/', 'build')))
+
 const elmsPerPage = 2
 
-let download = (uri) => {
+const download = (uri) => {
     return new Promise((resolve, reject) => {
         request.head(uri, (err, res, body) => {
             // console.log('content-type:', res.headers['content-type'])
@@ -31,38 +33,47 @@ let download = (uri) => {
             } else filenameWithoutExtension = filename.split('.').slice(0, -1).join('.')
             const pathname = './images/' + filename
 
-            const thumbnail = sharp().resize(500, 400)
-            request(uri).pipe(thumbnail).pipe(fs.createWriteStream(pathname)).on('close', () => resolve({
-                filename: filenameWithoutExtension,
-                size: res.headers['content-length'],
-                mimetype: res.headers['content-type'],
-                pathname
-            }))
+            const thumbnail = sharp().resize(500, 400).on('info', (info) => {
+                resolve({
+                    filename: filenameWithoutExtension,
+                    size: info.size,
+                    mimetype: res.headers['content-type'],
+                    pathname
+                })
+            })
+            request(uri).pipe(thumbnail).pipe(fs.createWriteStream(pathname)).on('close', () => console.log('done saving image'))
         })
     })
 }
 
-// app.use(express.static(path.join(__dirname + '/client/', 'build')))
+const getImgs = async () => {
+    const dbImgs = await dbManager.getAll()
+    let imgs = []
+    for (let dbImg of dbImgs) {
+        const bitmap = fs.readFileSync(dbImg.path)
+        const src = 'data:' + dbImg.mimetype + ';base64,' + Buffer.from(bitmap).toString('base64')
+        let img = {
+            name: dbImg.name,
+            size: dbImg.size,
+            date: dbImg.date,
+            id: dbImg.id,
+            src
+        }
+        imgs.push(img)
+    }
+    return imgs
+}
 
 app.get('/api', async (req, res) => {
     let start = parseInt(req.query.start)
     if (!start) start = 0
     try {
-        const dbImgs = await dbManager.getAll()
-        let imgs = []
-        for (let dbImg of dbImgs) {
-            const bitmap = fs.readFileSync(dbImg.path)
-            const src = 'data:' + dbImg.mimetype + ';base64,' + Buffer.from(bitmap).toString('base64')
-            let img = {
-                name: dbImg.name,
-                size: dbImg.size,
-                date: dbImg.date,
-                id: dbImg.id,
-                src
-            }
-            imgs.push(img)
-        }
-        imgs.sort((a, b) => b.date - a.date)
+        let imgs = await getImgs()
+
+        if (!req.query.sort || req.query.sort === 'date') imgs.sort((a, b) => b.date - a.date)
+        else if (req.query.sort === 'name') imgs.sort((a, b) => a.name.localeCompare(b.name))
+        else if (req.query.sort === 'size') imgs.sort((a, b) => a.size - b.size)
+        console.log(imgs.map(img => img.name))
         imgs = imgs.slice(start * elmsPerPage, start * elmsPerPage + elmsPerPage)
         res.json({ images: imgs })
     } catch (err) {

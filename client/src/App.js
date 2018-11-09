@@ -15,13 +15,15 @@ import './stylesheets/App.css'
 const sortBy = [
     {
         label: 'Name',
-        sort: (images) => [...images].sort((a, b) => a.name.localeCompare(b.name))
+        query: 'name'
     },
     {
-        label: 'Size'
+        label: 'Size',
+        query: 'size'
     },
     {
-        label: 'Upload date'
+        label: 'Upload date',
+        query: 'date'
     }
 ]
 
@@ -33,7 +35,8 @@ class App extends Component {
         find: '',
         loading: false,
         page: 0,
-        dynamicLoading: false
+        dynamicLoading: false,
+        sort: 'date'
     }
     getImages = this.getImages.bind(this)
 
@@ -43,8 +46,9 @@ class App extends Component {
 
     async getImages(page) {
         this.setState({ loading: true })
+        let url = '/api?start=' + page + '&sort=' + this.state.sort
         try {
-            let response = await fetch('/api?start=' + page, {
+            let response = await fetch(url, {
                 method: 'get',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
             })
@@ -54,7 +58,7 @@ class App extends Component {
                     if (image.name.length > 20) image.name = image.name.slice(0, 20) + '...'
 
                 let images = this.state.images
-                if (page !== this.state.page) images = images.concat(responseJson.images)
+                if (page > this.state.page) images = images.concat(responseJson.images)
                 else images = responseJson.images.slice()
                 this.setState({ images })
             }
@@ -66,8 +70,10 @@ class App extends Component {
     }
 
     onSort(event) {
-        this.setState({ [event.target.name]: event.target.value })
-        console.log(sortBy.find(elm => elm.label === event.target.value).sort(this.state.images))
+        this.setState({
+            [event.target.name]: event.target.value,
+            sort: sortBy.find(elm => elm.label === event.target.value).query
+        }, () => this.getImages(0))
     }
 
     async onLoadMore() {
@@ -84,7 +90,7 @@ class App extends Component {
                 <div className='app-body'>
                     <Paper style={{ padding: 10, paddingTop: 0, marginBottom: 20, marginTop: 20, width: '75%' }}>
                         <div style={{ marginTop: 10, marginBottom: 10, textAlign: 'left' }}>
-                            <Upload updateData={this.getImages} page={this.state.page} />
+                            <Upload updateData={this.getImages} />
                             <Divider style={{ marginTop: 10 }} />
                         </div>
                         <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '70%' }}>
