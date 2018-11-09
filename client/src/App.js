@@ -32,7 +32,7 @@ class App extends Component {
         tab: 0,
         sortBy: sortBy[2].label,
         images: [],
-        find: '',
+        search: '',
         loading: false,
         page: 0,
         dynamicLoading: false,
@@ -46,7 +46,7 @@ class App extends Component {
 
     async getImages(page) {
         this.setState({ loading: true })
-        let url = '/api?start=' + page + '&sort=' + this.state.sort
+        let url = '/api?start=' + page + '&sort=' + this.state.sort + '&search=' + this.state.search
         try {
             let response = await fetch(url, {
                 method: 'get',
@@ -59,7 +59,10 @@ class App extends Component {
 
                 let images = this.state.images
                 if (page > this.state.page) images = images.concat(responseJson.images)
-                else images = responseJson.images.slice()
+                else {
+                    images = responseJson.images.slice()
+                    this.setState({ page })
+                }
                 this.setState({ images })
             }
             this.setState({ loading: false })
@@ -98,13 +101,13 @@ class App extends Component {
                                 variant='outlined'
                                 label='Find image...'
                                 style={{ width: '65%' }}
-                                onChange={e => this.setState({ find: e.target.value })}
+                                onChange={e => this.setState({ search: e.target.value })}
                             />
                             <Button
                                 variant='outlined'
                                 color='secondary'
                                 style={{ width: '10%' }}
-                                onClick={() => console.log(this.state.find)}
+                                onClick={() => this.getImages(0, this.state.search)}
                             >
                                 Find
                             </Button>

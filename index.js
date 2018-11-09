@@ -22,7 +22,6 @@ const elmsPerPage = 2
 const download = (uri) => {
     return new Promise((resolve, reject) => {
         request.head(uri, (err, res, body) => {
-            // console.log('content-type:', res.headers['content-type'])
             if (res.headers['content-length'] > 10000000) reject('Image is too large')
             const parsed = url.parse(uri)
             let filename = path.basename(parsed.pathname)
@@ -73,7 +72,9 @@ app.get('/api', async (req, res) => {
         if (!req.query.sort || req.query.sort === 'date') imgs.sort((a, b) => b.date - a.date)
         else if (req.query.sort === 'name') imgs.sort((a, b) => a.name.localeCompare(b.name))
         else if (req.query.sort === 'size') imgs.sort((a, b) => a.size - b.size)
-        console.log(imgs.map(img => img.name))
+
+        if (req.query.search) imgs = imgs.filter(img => img.name.toLowerCase().includes(req.query.search.toLowerCase()))
+
         imgs = imgs.slice(start * elmsPerPage, start * elmsPerPage + elmsPerPage)
         res.json({ images: imgs })
     } catch (err) {
