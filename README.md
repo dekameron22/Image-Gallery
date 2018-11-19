@@ -1,12 +1,1 @@
-# Image-Gallery
-test case
-
-## Follow these instructions to run the project:
-```
-git clone https://github.com/AndrianCode/Image-Gallery.git
-cd Image-Gallery/
-mkdir images
-npm install
-sudo service mongod start // if your mongodb is not currently started
-npm start
-```
+Привіт ) Знойшов твоє резюме на Work.ua. Зараз шукаю Junior React/NodeJS developer до себе в компанію ) Якщо цікаво то можеж написати на цю пошту arte.tkachuk@gmail.com або в Linkedin https://www.linkedin.com/in/artem-tkachuk-45707083/
